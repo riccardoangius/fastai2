@@ -9,6 +9,10 @@ from .progress import *
 from .fp16 import MixedPrecision
 
 # Cell
+from ipywidgets import Output
+from IPython.display import display
+
+# Cell
 class TerminateOnNaNCallback(Callback):
     "A `Callback` that terminates training if loss is NaN."
     run_before=Recorder
@@ -68,6 +72,8 @@ class SaveModelCallback(TrackerCallback):
     def __init__(self, monitor='valid_loss', comp=None, min_delta=0., fname='model', every_epoch=False, add_save=None, with_opt=False):
         super().__init__(monitor=monitor, comp=comp, min_delta=min_delta)
         store_attr(self, 'fname,every_epoch,add_save,with_opt')
+        self.out = Output()
+        display(self.out)
 
     def _save(self, name):
         self.learn.save(name, with_opt=self.with_opt)
@@ -80,7 +86,9 @@ class SaveModelCallback(TrackerCallback):
         else: #every improvement
             super().after_epoch()
             if self.new_best:
-                print(f'Better model found at epoch {self.epoch} with {self.monitor} value: {self.best}.')
+                self.out.clear_output()
+                with self.out:
+                    print(f'Better model found at epoch {self.epoch} with {self.monitor} value: {self.best}.')
                 self._save(f'{self.fname}')
 
     def after_fit(self, **kwargs):
